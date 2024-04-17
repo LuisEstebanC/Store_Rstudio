@@ -1,5 +1,5 @@
 ---
-title: "Themed dashboard"
+title: "Tienda de productos"
 output: 
   flexdashboard::flex_dashboard:
     theme:
@@ -107,7 +107,7 @@ ventas_ciudad <- dbGetQuery(con, consulta_ventas_ciudad)
 
 ```
 
-Tienda
+Reporte semanal
 =======================================================================
 
 Column {data-width=650 .tabset .tabset-fade}
@@ -150,7 +150,7 @@ empleados_mas_altos_sueldo %>%
 
 
 
-### Chart A
+### Ciudades con mas ventas
 
 ```{r}
 custom_colors <- viridis::turbo(n = 105)
@@ -166,16 +166,12 @@ ventas_ciudad %>%
 
 ```
 
-### Chart B
 
-```{r}
-
-```
 
 Column {data-width=350}
 -----------------------------------------------------------------------
 
-### Chart C
+### Ventas Totales Mensuales por año
 
 ```{r}
 ggplot(data = ventasTotales, aes(x = mes, y = total_ventas, fill = as.factor(ano))) +
@@ -184,7 +180,7 @@ ggplot(data = ventasTotales, aes(x = mes, y = total_ventas, fill = as.factor(ano
   theme_minimal()
 ```
 
-### Chart D
+### Aumento de salario por empleado
 
 ```{r}
 ggplot(historial_salarios, aes(x = Empleado, y = Aumento_Salario)) +
