@@ -160,14 +160,17 @@ ventas_empleado %>%
 ```
 ### Empleados con salario mas alto
 ```{r}
+
+
+
 custom_colors <- viridis::turbo(n = 15)
 
 empleados_mas_altos_sueldo %>%
   hchart('bar', hcaes(x =Nombre, y = Salario, color = custom_colors )) %>%
   hc_add_theme(hc_theme_538()) %>%
    hc_tooltip(pointFormat = '<b>Salario anual: </b>{point.y}<br>') %>%
-  hc_title(text = 'Empleados mejor pagados', style = list(fontSize = '25px', fontWeight = 'bold')) %>%
-  hc_subtitle(text = 'Ordenados tomando en cuenta su salario actual', style = list(fontSize = '16px'))
+  hc_title(text = 'Empleados mejor pagados', style = list(fontSize = '15px', fontWeight = 'bold')) %>%
+  hc_subtitle(text = 'Ordenados tomando en cuenta su salario actual', style = list(fontSize = '12'))
 
 
 ```
