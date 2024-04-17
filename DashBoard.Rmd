@@ -1,0 +1,97 @@
+---
+title: "Themed dashboard"
+output: 
+  flexdashboard::flex_dashboard:
+    theme:
+      bg: "#101010"
+      fg: "#FDF7F7" 
+      primary: "#ED79F9"
+      base_font:
+        google: Prompt
+      code_font:
+        google: JetBrains Mono
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+#imports-------
+library(flexdashboard)
+library(tidyverse)
+library(highcharter)
+library(gt)
+library(htmltools)
+library(viridis)
+library(odbc)
+# Install thematic and un-comment for themed static plots (i.e., ggplot2)
+# thematic::thematic_rmd()
+```
+
+
+```{r}
+df <- dbConnect(odbc(),Driver = "SQL Server",Server = "DESKTOP-HGED49D\\SQLEXPRESS",Database = "Tienda",UID = "luisOwner",PWD = rstudioapi::askForPassword("1234"),Port = 1433)
+
+clients <- dbGetQuery(df, "Select * from clientes")
+
+productos <- dbGetQuery(df, "Select * from productos")
+detalle_venta <- dbGetQuery(df, "Select * from detalles_venta")
+datos_completos <- merge(productos, detalle_venta, by = "id_producto")
+
+```
+
+Tienda
+=======================================================================
+
+Column {data-width=650 .tabset .tabset-fade}
+-----------------------------------------------------------------------
+
+### Productos mas populares
+```{r}
+
+custom_colors <- viridis::mako(n = 15)
+
+productos_mas_vendidos <- datos_completos %>%
+  group_by(id_producto, nombre, .groups = "drop_last") %>%
+  summarize(total_vendido = sum(cantidad)) %>%
+  arrange(desc(total_vendido)) %>%
+  head(15)
+
+hchart(productos_mas_vendidos, type = 'column', hcaes(x = nombre, y = total_vendido, color = nombre)) %>%
+  hc_add_theme(hc_theme_google()) %>%
+  hc_tooltip(pointFormat = '<b>Cantidad vendida: </b>{point.y}<br>') %>%
+  hc_title(text = 'Productos más populares', style = list(fontSize = '25px', fontWeight = 'bold')) %>%
+  hc_subtitle(text = 'Ordenados por más vendidos', style = list(fontSize = '16px')) %>%
+  hc_credits(enable = TRUE, text ='@LuisCapellan')
+
+
+```
+
+
+
+### Chart A
+
+```{r}
+
+```
+
+### Chart B
+
+```{r}
+
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart C
+
+```{r}
+
+```
+
+### Chart D
+
+```{r}
+
+```
+
