@@ -104,6 +104,17 @@ ORDER BY cantidad_ventas DESC;"
 
 ventas_ciudad <- dbGetQuery(con, consulta_ventas_ciudad)
 
+#ventas por empleado
+
+consulta_ventas_empleado <- "SELECT e.nombre AS empleado, COUNT(v.id_venta) AS cantidad_ventas
+FROM empleados e
+INNER JOIN detalles_venta dv ON e.id_empleado = dv.id_empleado
+INNER JOIN ventas v ON dv.id_venta = v.id_venta
+GROUP BY e.nombre
+ORDER BY cantidad_ventas DESC;"
+
+ventas_empleado <- dbGetQuery(con, consulta_ventas_empleado)
+
 
 ```
 
@@ -132,20 +143,35 @@ hchart(productos_mas_vendidos, type = 'column', hcaes(x = nombre, y = total_vend
   hc_subtitle(text = 'Ordenados por más vendidos', style = list(fontSize = '16px'))
 
 ```
+### ventas por empleado
+```{r}
+custom_colors <- viridis::turbo(n = 35)
+
+ventas_empleado %>%
+  head(35) %>%
+  group_by(empleado) %>%
+  hchart('pie',hcaes(x = empleado, y= cantidad_ventas, color = custom_colors )) %>%
+  hc_add_theme(hc_theme_538()) %>%
+  hc_tooltip(pointFormat = '<b>Ventas: </b>{point.y}<br>') %>%
+  hc_title(text = 'Empleados con mas ventas', style = list(fontSize = '45px', fontWeight = 'bold')) 
+  
+  
+  
+```
 ### Empleados con salario mas alto
 ```{r}
 custom_colors <- viridis::turbo(n = 15)
 
 empleados_mas_altos_sueldo %>%
   hchart('bar', hcaes(x =Nombre, y = Salario, color = custom_colors )) %>%
-  hc_add_theme(hc_theme_ffx()) %>%
+  hc_add_theme(hc_theme_538()) %>%
    hc_tooltip(pointFormat = '<b>Salario anual: </b>{point.y}<br>') %>%
   hc_title(text = 'Empleados mejor pagados', style = list(fontSize = '25px', fontWeight = 'bold')) %>%
   hc_subtitle(text = 'Ordenados tomando en cuenta su salario actual', style = list(fontSize = '16px'))
 
-.libPaths()
 
 ```
+
 
 
 
@@ -183,12 +209,13 @@ ggplot(data = ventasTotales, aes(x = mes, y = total_ventas, fill = as.factor(ano
 ### Aumento de salario por empleado
 
 ```{r}
-ggplot(historial_salarios, aes(x = Empleado, y = Aumento_Salario)) +
-           geom_bar(stat = "identity") +
-           labs(title = "Aumento de salario por empleado",
-                x = "Empleado",
-                y = "Aumento de salario") +
-           theme_minimal() +
-           theme(axis.text.x = element_text(angle = 45, hjust = 1))
+ggplot(historial_salarios, aes(x = Empleado, y = Aumento_Salario, fill = Empleado)) +
+  geom_bar(stat = "identity") +
+  labs(title = "Aumento de salario por empleado",
+       x = "Empleado",
+       y = "Aumento de salario") +
+  scale_fill_viridis_d() +  
+  theme_gray() +  
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) 
 ```
 
