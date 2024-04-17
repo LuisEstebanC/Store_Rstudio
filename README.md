@@ -47,3 +47,8 @@ Para ejecutar este proyecto, sigue estos pasos:
 ## Graficas
 
 Proporciona una variedad de graficas usando diferentes librerias, con las cuales podemos tener un vision general de la compañia
+
+
+### Link para ver las graficas que existen actual mente
+
+- (link de RPubs)[https://rpubs.com/LuisCapellan2020/Tienda]
