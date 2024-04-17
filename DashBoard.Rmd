@@ -23,19 +23,54 @@ library(gt)
 library(htmltools)
 library(viridis)
 library(odbc)
+library(RColorBrewer)
+library(DBI)
+library(ggplot2)
+library(dplyr)
 # Install thematic and un-comment for themed static plots (i.e., ggplot2)
 # thematic::thematic_rmd()
 ```
 
 
 ```{r}
-df <- dbConnect(odbc(),Driver = "SQL Server",Server = "DESKTOP-HGED49D\\SQLEXPRESS",Database = "Tienda",UID = "luisOwner",PWD = rstudioapi::askForPassword("1234"),Port = 1433)
+con <- dbConnect(odbc(),Driver = "ODBC Driver 17 for SQL Server",Server = "DESKTOP-HGED49D\\SQLEXPRESS",Database = "Tienda",UID = "luisOwner",PWD = rstudioapi::askForPassword("1234"),Port = 1433)
 
-clients <- dbGetQuery(df, "Select * from clientes")
+clients <- dbGetQuery(con, "Select * from clientes")
+productos <- dbGetQuery(con, "Select * from productos")
+empleados <- dbGetQuery(con, 'SELECT * FROM empleados')
+ventas <- dbGetQuery(con, 'SELECT * FROM ventas')
 
-productos <- dbGetQuery(df, "Select * from productos")
-detalle_venta <- dbGetQuery(df, "Select * from detalles_venta")
+
+
+
+
+
+
+
+detalle_venta <- dbGetQuery(con, "Select * from detalles_venta")
 datos_completos <- merge(productos, detalle_venta, by = "id_producto")
+
+query_Empleados_Mas_altos_sueldos <-"SELECT TOP 15 nombre AS Nombre,salario AS Salario FROM empleados ORDER BY salario DESC"
+
+empleados_mas_altos_sueldo <- dbGetQuery(con, query_Empleados_Mas_altos_sueldos)
+
+
+# ventas por año y fecha
+ventasDF <- dbGetQuery(con, 'SELECT fecha_venta, total_venta FROM ventas')
+
+# Transformar la columna "fecha_venta" a formato de fecha
+ventasDF <- ventasDF %>%
+  mutate(fecha_venta = as.Date(fecha_venta))
+
+# Crear una nueva columna para el año y el mes
+ventasDF <- ventasDF %>%
+  mutate(ano = year(fecha_venta),
+         mes = month(fecha_venta))
+
+# Calcular las ventas totales por mes y año
+ventasTotales <- ventasDF %>%
+  group_by(ano, mes) %>%
+  summarize(total_ventas = sum(total_venta))
 
 ```
 
@@ -48,29 +83,45 @@ Column {data-width=650 .tabset .tabset-fade}
 ### Productos mas populares
 ```{r}
 
-custom_colors <- viridis::mako(n = 15)
+custom_colors <- viridis::magma(n = 9)
+MagmaPalette <- brewer.pal(n = 9, name = "Reds")
 
 productos_mas_vendidos <- datos_completos %>%
   group_by(id_producto, nombre, .groups = "drop_last") %>%
   summarize(total_vendido = sum(cantidad)) %>%
   arrange(desc(total_vendido)) %>%
-  head(15)
+  head(9)
 
-hchart(productos_mas_vendidos, type = 'column', hcaes(x = nombre, y = total_vendido, color = nombre)) %>%
+hchart(productos_mas_vendidos, type = 'column', hcaes(x = nombre, y = total_vendido, color = custom_colors)) %>%
   hc_add_theme(hc_theme_google()) %>%
   hc_tooltip(pointFormat = '<b>Cantidad vendida: </b>{point.y}<br>') %>%
   hc_title(text = 'Productos más populares', style = list(fontSize = '25px', fontWeight = 'bold')) %>%
-  hc_subtitle(text = 'Ordenados por más vendidos', style = list(fontSize = '16px')) %>%
-  hc_credits(enable = TRUE, text ='@LuisCapellan')
-
+  hc_subtitle(text = 'Ordenados por más vendidos', style = list(fontSize = '16px'))
 
 ```
+### Empleados con salario mas alto
+```{r}
+custom_colors <- viridis::plasma(n = 15)
+empleados_mas_altos_sueldo %>%
+  hchart('bar', hcaes(x =Nombre, y = Salario, color = custom_colors )) %>%
+  hc_add_theme(hc_theme_ffx()) %>%
+   hc_tooltip(pointFormat = '<b>Salario anual: </b>{point.y}<br>') %>%
+  hc_title(text = 'Empleados mejor pagados', style = list(fontSize = '25px', fontWeight = 'bold')) %>%
+  hc_subtitle(text = 'Ordenados tomando en cuenta su salario actual', style = list(fontSize = '16px'))
+
+.libPaths()
+
+```
+
 
 
 
 ### Chart A
 
 ```{r}
+
+
+
 
 ```
 
@@ -86,7 +137,10 @@ Column {data-width=350}
 ### Chart C
 
 ```{r}
-
+ggplot(data = ventasTotales, aes(x = mes, y = total_ventas, fill = as.factor(ano))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(x = "Mes", y = "Ventas Totales", title = "Ventas Totales Mensuales por Anio") +
+  theme_minimal()
 ```
 
 ### Chart D
