@@ -46,7 +46,6 @@ ventas <- dbGetQuery(con, 'SELECT * FROM ventas')
 
 
 
-
 detalle_venta <- dbGetQuery(con, "Select * from detalles_venta")
 datos_completos <- merge(productos, detalle_venta, by = "id_producto")
 
@@ -71,6 +70,40 @@ ventasDF <- ventasDF %>%
 ventasTotales <- ventasDF %>%
   group_by(ano, mes) %>%
   summarize(total_ventas = sum(total_venta))
+
+
+
+
+# historico salarial
+
+Consulta_historial_salarios <- "
+SELECT TOP 10
+    e.nombre AS Empleado,
+    hs.salario_anterior AS Salario_Anterior,
+    hs.salario_nuevo - hs.salario_anterior AS Aumento_Salario,
+    hs.fecha_actualizacion AS Fecha_Actualizacion
+FROM 
+    empleados e
+INNER JOIN 
+    historial_salarios hs ON e.id_empleado = hs.id_empleado
+ORDER BY 
+    Aumento_Salario DESC;
+"
+
+historial_salarios <- dbGetQuery(con, Consulta_historial_salarios)
+
+historial_salarios$Fecha_Actualizacion <- as.Date(historial_salarios$Fecha_Actualizacion)
+
+# ventas por ciudad
+
+consulta_ventas_ciudad <- "SELECT c.ciudad, COUNT(v.id_venta) AS cantidad_ventas
+FROM clientes c
+INNER JOIN ventas v ON c.id_cliente = v.id_cliente
+GROUP BY c.ciudad
+ORDER BY cantidad_ventas DESC;"
+
+ventas_ciudad <- dbGetQuery(con, consulta_ventas_ciudad)
+
 
 ```
 
@@ -101,7 +134,8 @@ hchart(productos_mas_vendidos, type = 'column', hcaes(x = nombre, y = total_vend
 ```
 ### Empleados con salario mas alto
 ```{r}
-custom_colors <- viridis::plasma(n = 15)
+custom_colors <- viridis::turbo(n = 15)
+
 empleados_mas_altos_sueldo %>%
   hchart('bar', hcaes(x =Nombre, y = Salario, color = custom_colors )) %>%
   hc_add_theme(hc_theme_ffx()) %>%
@@ -119,7 +153,14 @@ empleados_mas_altos_sueldo %>%
 ### Chart A
 
 ```{r}
+custom_colors <- viridis::turbo(n = 105)
 
+ventas_ciudad %>%
+  head(105)%>%
+  hchart('scatter', hcaes(x = ciudad, y = cantidad_ventas, color = custom_colors )) %>%
+  hc_add_theme(hc_theme_ffx()) %>%
+    hc_tooltip(pointFormat = '<b>ventas: </b>{point.y}<br>') %>%
+  hc_title(text = 'Ciudades con mas ventas', style = list(fontSize = '25px', fontWeight = 'bold')) 
 
 
 
@@ -146,6 +187,12 @@ ggplot(data = ventasTotales, aes(x = mes, y = total_ventas, fill = as.factor(ano
 ### Chart D
 
 ```{r}
-
+ggplot(historial_salarios, aes(x = Empleado, y = Aumento_Salario)) +
+           geom_bar(stat = "identity") +
+           labs(title = "Aumento de salario por empleado",
+                x = "Empleado",
+                y = "Aumento de salario") +
+           theme_minimal() +
+           theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
